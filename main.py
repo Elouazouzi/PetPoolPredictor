@@ -1,6 +1,8 @@
 import sys
+import os
 import random
 from collections import defaultdict, Counter
+import json
 from PySide6.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton,
     QComboBox, QGridLayout, QVBoxLayout, QGroupBox,
@@ -55,43 +57,14 @@ def chain_bonus(candidate, placed):
 def distance_penalty(candidate, slot):
     return DISTANCE_PENALTY * (candidate.index - (slot + 1)) ** 2
 
-#TODO: Import from external file and populate with more talents data
-TALENT_DB = {
-    "Death-Spear": 2,
-    "Plaguebringer": 3,
-    "Virulence": 3,
-    "Rugged": 1,
-    "Fairy-Friend": 1,
-    "Death-Boon": 0,
-    "Death-Ward": 3,
-    "Death-Assailant": 4,
-    "Black-Mantle": 3,
-    "Armor-Breaker": 4,
-    "Sharp-Shot": 3,
-    "Pain-Bringer": 2,
-    "Pain-Giver": 3,
-    "Spell-Proof": 4,
-    "Critical-Striker": 4,
-    "Death-Dealer": 3,
-    "Death-Giver": 1,
-    "Mighty": 3,
-
-
-    "Epic-Fishing-Luck": 4,
-    "Fishing-Luck": 4,
-    "FireSpear": 2,
-    "Reveal-Fish-School": 2,
-    "Gold-Miner": 4,
-    "Gardening-Pixie": 2,
-    "Hatch-Catcher": 2,
-    "Energy": 1,
-    "Big-Energy": 2,
-    "Huge-Energy": 3,
-    "Ultra-Energy": 4,
-
-
-}
-
+talents_data_file = './data/talents.json'
+TALENT_DB = {}
+if os.path.exists(talents_data_file):
+        try:
+            with open(talents_data_file, 'r') as f:
+                TALENT_DB = json.load(f)
+        except json.JSONDecodeError:
+            print(f"Warning: {talents_data_file} was empty or corrupted.")
 
 RARITIES = ["0", "1", "2", "3", "4"]
 
@@ -222,9 +195,7 @@ class MainWindow(QWidget):
         talent_names = []
         talents_dict = {}
 
-        print("Combined Parents Pool:")
         for i, t in enumerate(talents, 1):
-            print(f"{i}. {t.name} ({t.rarity})")
             talents_dict[t.name] = t.rarity
             talent_names.append(t.name)
 
@@ -264,7 +235,13 @@ class MainWindow(QWidget):
                         used.add(t.name)
                         break
 
-            full_counts[tuple(t.name for t in chosen)] += 1
+            try:
+                full_counts[tuple(t.name for t in chosen)] += 1
+            except:
+                self.output.clear()
+                self.output.append("Error: Input data is invalid, please check the talents and masked rarities for errors and try again.")
+                break
+
 
 
 
