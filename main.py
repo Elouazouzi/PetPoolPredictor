@@ -11,6 +11,16 @@ from PySide6.QtWidgets import (
 
 random.seed(42)
 
+def resource_path(relative_path):
+    """ Get absolute path to resource """
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 # -------------------------
 # Talent class (no parent, manifested ignored)
 # -------------------------
@@ -57,7 +67,7 @@ def chain_bonus(candidate, placed):
 def distance_penalty(candidate, slot):
     return DISTANCE_PENALTY * (candidate.index - (slot + 1)) ** 2
 
-talents_data_file = './data/talents.json'
+talents_data_file = resource_path("data/talents.json")
 TALENT_DB = {}
 if os.path.exists(talents_data_file):
         try:
