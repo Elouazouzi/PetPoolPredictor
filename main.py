@@ -1,6 +1,7 @@
 import sys
 import os
 import random
+import uuid
 from collections import defaultdict, Counter
 import json
 from PySide6.QtWidgets import (
@@ -10,6 +11,9 @@ from PySide6.QtWidgets import (
 )
 
 random.seed(42)
+
+RARITIES = ["0", "1", "2", "3", "4"]
+RARITIES_STR = ["Common","Uncommon","Rare","Ultra-Rare","Epic"]
 
 def resource_path(relative_path):
     """ Get absolute path to resource """
@@ -36,6 +40,11 @@ def build_pool(input_pool):
     talents_pool = []
     index = 1
     for t, r in input_pool:
+
+        if t == "???":
+            short_id = uuid.uuid4().hex[:6]
+            t = f"{t} - {short_id}" 
+
         talents_pool.append(Talent(t, r, index))
         index += 1
 
@@ -76,7 +85,6 @@ if os.path.exists(talents_data_file):
         except json.JSONDecodeError:
             print(f"Warning: {talents_data_file} was empty or corrupted.")
 
-RARITIES = ["0", "1", "2", "3", "4"]
 
 
 class TalentRow(QWidget):
@@ -268,14 +276,23 @@ class MainWindow(QWidget):
         output_string += "Predicted Pool:\n" 
         for i, name in enumerate(best_pool):
             best_pool_names.append(name)
-            output_string += f"[{i+1:<2}] {name:<{max_len}} ({talents_dict[name]})\n"
+            rarity = talents_dict[name]
+            #clean ids
+            if "???" in name:
+                name = RARITIES_STR[rarity]
+
+            output_string += f"[{i+1:<2}] {name:<{max_len}} ({rarity})\n"
 
         output_string += f"Confidence: {round(100 * count / SIMS, 2)}%\n"
         output_string +="-------------\n"
         output_string += "Lost talents:\n"
         for t in talent_names:
+            rarity = talents_dict[t]
             if t not in best_pool_names:
-                output_string += f"{'':<5} {t:<{max_len}} ({talents_dict[t]})\n" 
+                #clean ids
+                if "???" in t:
+                    t = RARITIES_STR[rarity]
+                output_string += f"{'':<5} {t:<{max_len}} ({rarity})\n" 
 
 
         self.output.clear()
